@@ -1,0 +1,43 @@
+PARA REALIZAR LA TRADUCCIÓN
+==============================
+Leer este enlace:
+https://jamesinnorway.wordpress.com/2014/04/08/translation-of-qgis-plugins/
+
+NOTA: Recomendamos que el interfaz gráfico (fichero ui) se haga todo en inglés
+
+1. Fíjate en el método "_init(self,iface)" de la clase principal del plugin, donde hay código para la "localización"
+
+        # initialize locale
+        locale = QSettings().value('locale/userLocale')[0:2]
+        locale_path = os.path.join(
+            self.plugin_dir,
+            'i18n',
+            'DotMap_{}.qm'.format(locale))
+            
+            
+ En este caso los archivos que necesita PyQt para la traducción son los que tienen la plantilla DotMap_{}.qm. Osea que 
+ Qt necesita archivos llamados DotMap_es.qm (para español), DotMap_fr.qm (para francés), etc.
+
+2. Crea un archivo llamado "traduccion.pro" con este contenido
+***************************************
+FORMS = ../dot_map_dialog_base.ui
+
+
+TRANSLATIONS = DotMap_es.ts
+***************************************
+En forms tiene que apuntar al fichero ".ui"
+
+3. Ejecutar en ese directorio y por terminal lo siguiente:
+
+pylupdate4 traduccion.pro
+
+Se generará el archivo "DotMap_es.ts" 
+4. Abre este archivo con Qt Linguist
+- traduce cada entrada de labels, botones, etc
+- valida cada entrada
+- finalmente ir a File -> Release
+Habrá generado correctamente el fichero DotMap_es.qm
+
+Repetir los pasos por cada idioma deseado
+
+Fin del tutorial
