@@ -16,8 +16,8 @@ email=josema.mira@gmail.com
 
 about=A dot-density map is a type of thematic map that uses dots or other symbols on the map to show the values of one or more numeric data fields. Each dot on a dot-density map represents some amount of data. Qgis has not a simbology for this type of data. For this reason, this plugin can create a dot density layer from a polygon layer with a integer field with the data that user would like to convert to dots. 
 
-tracker=http://bugs
-repository=http://repo
+tracker=https://github.com/josemamira/DotMap
+repository=https://github.com/josemamira/DotMap
 # End of mandatory metadata
 
 # Recommended items:
@@ -28,7 +28,7 @@ repository=http://repo
 # Tags are comma separated with spaces allowed
 tags=density map, dots
 
-homepage=http://homepage
+homepage=https://github.com/josemamira
 category=Vector
 icon=icon.png
 # experimental flag
