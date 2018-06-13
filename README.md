@@ -29,4 +29,8 @@ For each polygon, the plugin gets its box (minx, maxx, miny, maxy). Then, divide
 For each point, the algorithm generates a random point included in the table. Next, we verify if the point is inside the polygon, and then this is designed as a candidate.
 If the geometry is a multipolygon with many islands the algorithm slows down because the spatial box is very large, and the chances of the point falling is an island is very small.
 
+### Notes
+There are two folder, each one for Qgis 2.X or Qgis 3.X
 
+### Tested
+Tested in Linux box with Qgis 2.14, 2.18 and 3.03
