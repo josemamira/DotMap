@@ -2,7 +2,7 @@
 Dot density map plugin for Qgis 
 
 Screenshot:
-![alt text](https://github.com/josemamira/DotMap/raw/master/doc/captura_plugin1.png "Captura")
+![alt text](https://github.com/josemamira/DotMap/blob/master/doc/Selecci%C3%B3n_156.png "Captura")
 ### Description
 Easy plugin to make a density layer from a polygon layer with an integer field.
 
