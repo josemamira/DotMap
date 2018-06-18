@@ -10,7 +10,7 @@
 name=Dot Map
 qgisMinimumVersion=3.0
 description=Create density dot layer from polygons
-version=0.1
+version=0.2
 author=Jose Manuel Mira Martinez
 email=josema.mira@gmail.com
 
