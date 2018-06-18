@@ -201,9 +201,10 @@ class DotMap:
         self.dlg.simMaxValBox.clear()
         self.dlg.simMinValBox.clear()
         self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
-        bar = self.dlg.bar
-        bar.setValue(0)
-        bar.setMaximum(100)
+
+        #bar = self.dlg.bar
+        #bar.setValue(0)
+        #bar.setMaximum(100)
 
 
         # Listar capas poligonales
@@ -226,20 +227,30 @@ class DotMap:
         if not layer_list:
             QMessageBox.about(self.iface.mainWindow(), 'Message','Polygon layers not found')
             self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
-        else:
+        #else:
             # show the dialog
             #self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(True)
-            self.dlg.show()
+            #self.dlg.show()
         # Run the dialog event loop
+        self.dlg.show()
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
             # Evento cuando se hace clic en boton OK
-            #QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('HelloWorld', "HelloWorld"), "resultado de boton OK")
+            #from PyQt4.QtGui import QProgressDialog, QProgressBar
+            dialog = QProgressDialog()
+            dialog.setWindowTitle("Dot progress")
+            #dialog.setLabelText("text")
+            bar = QProgressBar(dialog)
+            bar.setTextVisible(True)
+            bar.setValue(0)
+            dialog.setBar(bar)
+            dialog.setMinimumWidth(300)
+            dialog.show()
+
             name = self.dlg.layerComboBox.currentText()
             layer = QgsMapLayerRegistry.instance().mapLayersByName( name )[0]
             crs = layer.crs().authid()
-            #QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('CRS', "CRS"), crs)
             divisor = self.dlg.valForDot.text().encode('ascii','ignore')
             cuenta = layer.featureCount()
             #print "cuenta es: "+ str(cuenta)
@@ -253,31 +264,16 @@ class DotMap:
                 symbol = QgsMarkerSymbolV2.createSimple({'name': 'circle', 'color': 'black', 'size':'1'})
                 dotLyr.rendererV2().setSymbol(symbol)
                 dotFeatures = []
-                #bar
-
-                #pass the progress bar to the message Bar
-                #progressMessageBar.pushWidget(bar)
-
-
-
-                #QMessageBox.about(self.iface.mainWindow(), 'Cuenta',str(cuenta) )
-
                 j = 0
 
                 for feature in features:
                     pop = feature.attributes()[i]
-                    ######################################
                     #Update the progress bar
-                    ######################################
                     j = j + 1
                     percent = (j/float(cuenta)) * 100
-                    print "percent is: " + str(int(percent))+ " %"
-                    self.dlg.bar.setValue(int(percent))
-                    if int(percent) < 100:
-                        self.dlg.show() #mientras se ejecuta
-                    else:
-                        self.dlg.close()
-
+                    #print "percent is: " + str(int(percent))+ " %"
+                    #self.dlg.bar.setValue(int(percent))
+                    bar.setValue(percent)
 
                     if pop != 0:
                         density = pop / int(divisor)
@@ -288,6 +284,7 @@ class DotMap:
                         miny = g.boundingBox().yMinimum()
                         maxx = g.boundingBox().xMaximum()
                         maxy = g.boundingBox().yMaximum()
+
                         while found < density:
                             x = random.uniform(minx,maxx)
                             y = random.uniform(miny,maxy)
