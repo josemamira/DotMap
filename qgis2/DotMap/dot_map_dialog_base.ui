@@ -13,17 +13,17 @@
   <property name="windowTitle">
    <string>Dot Density</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>31</x>
-     <y>21</y>
+     <x>30</x>
+     <y>22</y>
      <width>395</width>
-     <height>232</height>
+     <height>261</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0" colspan="3">
+    <item row="0" column="0">
      <widget class="QLabel" name="label">
       <property name="text">
        <string>Select a polygon layer</string>
@@ -33,7 +33,7 @@
     <item row="1" column="0" colspan="3">
      <widget class="QComboBox" name="layerComboBox"/>
     </item>
-    <item row="2" column="0" colspan="3">
+    <item row="2" column="0">
      <widget class="QLabel" name="label_2">
       <property name="text">
        <string>Select a integer field</string>
