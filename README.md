@@ -26,7 +26,7 @@ This plugin is based in Chapter 8: "Creating a dot density map" from book "QGIS 
 
 ### Limitations
 For each polygon, the plugin gets its box (minx, maxx, miny, maxy). Then, divide the value of the attribute of the field selected by the user's divisor to know the number of points per polygon.
-For each point, the algorithm generates a random point included in the table. Next, we verify if the point is inside the polygon, and then this is designed as a candidate.
+For each point, the algorithm generates a random point included in the table. Next, it verify if the point is inside the polygon, and then this is designed as a candidate.
 If the geometry is a multipolygon with many islands the algorithm slows down because the spatial box is very large, and the chances of the point falling is an island is very small.
 
 ### Notes
