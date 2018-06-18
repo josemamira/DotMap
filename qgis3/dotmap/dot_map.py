@@ -27,7 +27,7 @@ from qgis.PyQt.QtGui import *
 
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMessageBox, QDialogButtonBox
+from PyQt5.QtWidgets import QAction, QMessageBox, QDialogButtonBox, QProgressBar, QProgressDialog
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -167,7 +167,7 @@ class DotMap:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/dot_map/icon.png'
+        icon_path = ':/plugins/DotMap/icon.png'
         self.add_action(
             icon_path,
             text=self.tr(u'Dot density layer'),
@@ -197,7 +197,7 @@ class DotMap:
         self.dlg.valForDot.clear()
         self.dlg.simMinValBox.clear()
         self.dlg.simMaxValBox.clear() 
-        self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(False)       
+        self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(False)   
         #borrar lista
         self.dlg.layerComboBox.clear()
         layer_list = []
@@ -217,36 +217,45 @@ class DotMap:
             self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
         else:
             # show the dialog
-            #self.dlg.button_box.button(QDialogButtonBox.Ok).setDisabled(False)
             self.dlg.show()
-        # Run the dialog event loop
 
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
             # Evento cuando se hace clic en boton OK
+            # Crear ventana dialogo
+            dialog = QProgressDialog()
+            dialog.setWindowTitle("Progress")
+            bar = QProgressBar(dialog)
+            bar.setTextVisible(True)
+            bar.setValue(0)
+            dialog.show()
             #QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('HelloWorld', "HelloWorld"), "resultado de boton OK")
             name = self.dlg.layerComboBox.currentText()
             layer = QgsProject.instance().mapLayersByName( name )[0]
             crs = layer.crs().authid()
             #QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('CRS', "CRS"), crs)
             divisor = self.dlg.valForDot.text()
-            #divisor = self.dlg.valForDot.text().encode('ascii','ignore')
+            cuenta = layer.featureCount()
 
             try:
-                #divisor = int(divisor)
                 dotLyr =  QgsVectorLayer('Point?crs='+crs, self.dlg.fieldComboBox.currentText() +' (1 dot = '+divisor+')', "memory")
-                #i = layer.lookupField(self.dlg.fieldComboBox.currentText())
                 features = layer.getFeatures()
                 vpr = dotLyr.dataProvider()
-                #QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('HelloWorld', "HelloWorld"), "resultado de boton OK")
                 # simbologia
                 symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'black', 'size':'1'})
                 dotLyr.renderer().setSymbol(symbol)
                 dotFeatures = []
+                j = 0
                 for feature in features:
                     pop = feature[self.dlg.fieldComboBox.currentText()]
+                    #Update the progress bar
+                    j = j + 1
+                    percent = (j/float(cuenta)) * 100
+                    print( "percent is: " + str(int(percent))+ " %")
+                    bar.setValue(percent)
+
                     density = pop / int(divisor)
                     found = 0
                     dots = []
@@ -291,7 +300,6 @@ class DotMap:
         fields = layer.fields()
         for field in fields:
             if (field.typeName() == 'Integer' or field.typeName() == 'Integer64'):  # Real, String ...
-                #print field.name() + 'tipo: ' + field.typeName()
                 self.dlg.fieldComboBox.addItem(field.name())
 
         self.dlg.fieldComboBox.activated.connect(self.getStats)
