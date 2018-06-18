@@ -201,6 +201,9 @@ class DotMap:
         self.dlg.simMaxValBox.clear()
         self.dlg.simMinValBox.clear()
         self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        bar = self.dlg.bar
+        bar.setValue(0)
+        bar.setMaximum(100)
 
 
         # Listar capas poligonales
@@ -238,6 +241,8 @@ class DotMap:
             crs = layer.crs().authid()
             #QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('CRS', "CRS"), crs)
             divisor = self.dlg.valForDot.text().encode('ascii','ignore')
+            cuenta = layer.featureCount()
+            #print "cuenta es: "+ str(cuenta)
             try:
                 #divisor = int(divisor)
                 dotLyr =  QgsVectorLayer('Point?crs='+crs, self.dlg.fieldComboBox.currentText() +' (1 dot = '+divisor+')', "memory")
@@ -248,9 +253,32 @@ class DotMap:
                 symbol = QgsMarkerSymbolV2.createSimple({'name': 'circle', 'color': 'black', 'size':'1'})
                 dotLyr.rendererV2().setSymbol(symbol)
                 dotFeatures = []
+                #bar
+
+                #pass the progress bar to the message Bar
+                #progressMessageBar.pushWidget(bar)
+
+
+
+                #QMessageBox.about(self.iface.mainWindow(), 'Cuenta',str(cuenta) )
+
+                j = 0
 
                 for feature in features:
                     pop = feature.attributes()[i]
+                    ######################################
+                    #Update the progress bar
+                    ######################################
+                    j = j + 1
+                    percent = (j/float(cuenta)) * 100
+                    print "percent is: " + str(int(percent))+ " %"
+                    self.dlg.bar.setValue(int(percent))
+                    if int(percent) < 100:
+                        self.dlg.show() #mientras se ejecuta
+                    else:
+                        self.dlg.close()
+
+
                     if pop != 0:
                         density = pop / int(divisor)
                         found = 0
@@ -268,7 +296,7 @@ class DotMap:
                             if g.contains(pnt):
                                 dots.append(pnt)
                                 found += 1
-                                print str(found)
+                                #print str(found)
                         geom = QgsGeometry.fromMultiPoint(dots)
                         f = QgsFeature()
                         f.setGeometry(geom)
@@ -283,6 +311,7 @@ class DotMap:
                 self.dlg.minValBox.clear()
                 self.dlg.maxValBox.clear()
                 self.dlg.valForDot.clear()
+
 
 
 
@@ -304,7 +333,7 @@ class DotMap:
         field_names = []
         for field in fields:
             if (field.typeName() == 'Integer' or field.typeName() == 'Integer64'):  # Real, String ...
-                print field.name() + 'tipo: ' + field.typeName()
+                #print field.name() + 'tipo: ' + field.typeName()
                 self.dlg.fieldComboBox.addItem(field.name())
 
         self.dlg.fieldComboBox.activated.connect(self.getStats)
