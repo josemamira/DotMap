@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/plugins/dot_map" >
-        <file>icon.png</file>
-    </qresource>
-</RCC>
