@@ -27,8 +27,9 @@ from qgis.PyQt.QtGui import *
 
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMessageBox, QDialogButtonBox, QProgressBar, QProgressDialog
-
+from PyQt5.QtWidgets import QApplication
+#from PyQt5.QtWidgets import QAction, QMessageBox, QDialogButtonBox, QProgressBar, QProgressDialog
+from PyQt5.QtWidgets import *
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
@@ -225,12 +226,18 @@ class DotMap:
         if result:
             # Evento cuando se hace clic en boton OK
             # Crear ventana dialogo
+
+
+            #dialog = QProgressDialog("Dot progress", "Cancel", 0, 100,self.dlg)
             dialog = QProgressDialog()
-            dialog.setWindowTitle("Progress")
+            dialog.setWindowTitle("Dot progress")
             bar = QProgressBar(dialog)
-            bar.setTextVisible(True)
             bar.setValue(0)
+            dialog.setBar(bar)
+            dialog.setMinimumWidth(300)
             dialog.show()
+
+
             #QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('HelloWorld', "HelloWorld"), "resultado de boton OK")
             name = self.dlg.layerComboBox.currentText()
             layer = QgsProject.instance().mapLayersByName( name )[0]
@@ -248,14 +255,16 @@ class DotMap:
                 dotLyr.renderer().setSymbol(symbol)
                 dotFeatures = []
                 j = 0
+                
                 for feature in features:
                     pop = feature[self.dlg.fieldComboBox.currentText()]
                     #Update the progress bar
                     j = j + 1
                     percent = (j/float(cuenta)) * 100
-                    print( "percent is: " + str(int(percent))+ " %")
+                    #print( "percent is: " + str(int(percent))+ " %")
                     bar.setValue(percent)
-
+                    QApplication.processEvents()
+                    
                     density = pop / int(divisor)
                     found = 0
                     dots = []
