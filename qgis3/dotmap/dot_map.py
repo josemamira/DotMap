@@ -203,9 +203,11 @@ class DotMap:
         self.dlg.layerComboBox.clear()
         layer_list = []
         for layer in QgsProject.instance().mapLayers().values():
-            if layer.geometryType() == 2: #2=poligonos
-                layer_list.append(layer.name())
-                self.dlg.layerComboBox.addItem(layer.name())
+            layerType = layer.type()
+            if layerType == QgsMapLayer.VectorLayer:
+                if layer.geometryType() == 2: #2=poligonos
+                    layer_list.append(layer.name())
+                    self.dlg.layerComboBox.addItem(layer.name())
 
         self.dlg.layerComboBox.activated.connect(self.getNumFields)
         self.dlg.simulationButton.setEnabled(False)            
