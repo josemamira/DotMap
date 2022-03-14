@@ -8,7 +8,7 @@
                               -------------------
         begin                : 2018-06-04
         git sha              : $Format:%H$
-        copyright            : (C) 2018 by Jose Manuel Mira Martinez
+        copyright            : (C) 2022 by Jose Manuel Mira Martinez
         email                : josema.mira@gmail.com
  ***************************************************************************/
 
@@ -260,32 +260,33 @@ class DotMap:
                 
                 for feature in features:
                     pop = feature[self.dlg.fieldComboBox.currentText()]
-                    #Update the progress bar
-                    j = j + 1
-                    percent = (j/float(cuenta)) * 100
-                    #print( "percent is: " + str(int(percent))+ " %")
-                    bar.setValue(percent)
-                    QApplication.processEvents()
-                    
-                    density = pop / int(divisor)
-                    found = 0
-                    dots = []
-                    g = feature.geometry()
-                    minx = g.boundingBox().xMinimum()
-                    miny = g.boundingBox().yMinimum()
-                    maxx = g.boundingBox().xMaximum()
-                    maxy = g.boundingBox().yMaximum()
-                    while found < density:
-                        x = random.uniform(minx,maxx)
-                        y = random.uniform(miny,maxy)
-                        pnt = QgsPointXY(x,y)
-                        if g.contains(pnt):
-                            dots.append(pnt)
-                            found += 1
-                    geom = QgsGeometry.fromMultiPointXY(dots)
-                    f = QgsFeature()
-                    f.setGeometry(geom)
-                    dotFeatures.append(f)
+                    if pop > 0:
+                        #Update the progress bar
+                        j = j + 1
+                        percent = (j/float(cuenta)) * 100
+                        #print( "percent is: " + str(int(percent))+ " %")
+                        bar.setValue(percent)
+                        QApplication.processEvents()
+                        
+                        density = pop / int(divisor)
+                        found = 0
+                        dots = []
+                        g = feature.geometry()
+                        minx = g.boundingBox().xMinimum()
+                        miny = g.boundingBox().yMinimum()
+                        maxx = g.boundingBox().xMaximum()
+                        maxy = g.boundingBox().yMaximum()
+                        while found < density:
+                            x = random.uniform(minx,maxx)
+                            y = random.uniform(miny,maxy)
+                            pnt = QgsPointXY(x,y)
+                            if g.contains(pnt):
+                                dots.append(pnt)
+                                found += 1
+                        geom = QgsGeometry.fromMultiPointXY(dots)
+                        f = QgsFeature()
+                        f.setGeometry(geom)
+                        dotFeatures.append(f)
 
                 vpr.addFeatures(dotFeatures)
                 dotLyr.updateExtents()
@@ -325,7 +326,8 @@ class DotMap:
         pob = []
         for feature in layer.getFeatures():
             value = feature[fieldSel]
-            pob.append( int(value) )
+            if value > 0:
+                pob.append( int(value) )          
 
         maxVal = sorted(pob, reverse=True)[0]
         minVal = sorted(pob)[0]
@@ -344,5 +346,3 @@ class DotMap:
                 self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(True)
         except Exception:
             QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('ERROR', "ERROR"), "Void divisor or lower than 0 or divisor higher than max value")
-
-
