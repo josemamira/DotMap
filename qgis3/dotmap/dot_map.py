@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
@@ -8,7 +9,7 @@
                               -------------------
         begin                : 2018-06-04
         git sha              : $Format:%H$
-        copyright            : (C) 2022 by Jose Manuel Mira Martinez
+        copyright            : (C) 2022 by Jose Manuel Mira
         email                : josema.mira@gmail.com
  ***************************************************************************/
 
@@ -28,32 +29,19 @@ from qgis.PyQt.QtGui import *
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
-#from PyQt5.QtWidgets import QAction, QMessageBox, QDialogButtonBox, QProgressBar, QProgressDialog
 from PyQt5.QtWidgets import *
-# Initialize Qt resources from file resources.py
 from .resources import *
-# Import the code for the dialog
 from .dot_map_dialog import DotMapDialog
 import os.path
 import random
-
+import math
 
 class DotMap:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
-        """Constructor.
-
-        :param iface: An interface instance that will be passed to this class
-            which provides the hook by which you can manipulate the QGIS
-            application at run time.
-        :type iface: QgsInterface
-        """
-        # Save reference to the QGIS interface
         self.iface = iface
-        # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-        # initialize locale
         locale = QSettings().value('locale/userLocale')[0:2]
         locale_path = os.path.join(
             self.plugin_dir,
@@ -63,84 +51,30 @@ class DotMap:
         if os.path.exists(locale_path):
             self.translator = QTranslator()
             self.translator.load(locale_path)
-
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
-        # Create the dialog (after translation) and keep reference
         self.dlg = DotMapDialog()
-
-        # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Dot Map')
-        # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'DotMap')
         self.toolbar.setObjectName(u'DotMap')
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
-        """Get the translation for a string using Qt translation API.
-
-        We implement this ourselves since we do not inherit QObject.
-
-        :param message: String for translation.
-        :type message: str, QString
-
-        :returns: Translated version of message.
-        :rtype: QString
-        """
-        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('DotMap', message)
 
     def add_action(
-            self,
-            icon_path,
-            text,
-            callback,
-            enabled_flag=True,
-            add_to_menu=True,
-            add_to_toolbar=True,
-            status_tip=None,
-            whats_this=None,
-            parent=None):
-        """Add a toolbar icon to the toolbar.
-
-        :param icon_path: Path to the icon for this action. Can be a resource
-            path (e.g. ':/plugins/foo/bar.png') or a normal file system path.
-        :type icon_path: str
-
-        :param text: Text that should be shown in menu items for this action.
-        :type text: str
-
-        :param callback: Function to be called when the action is triggered.
-        :type callback: function
-
-        :param enabled_flag: A flag indicating if the action should be enabled
-            by default. Defaults to True.
-        :type enabled_flag: bool
-
-        :param add_to_menu: Flag indicating whether the action should also
-            be added to the menu. Defaults to True.
-        :type add_to_menu: bool
-
-        :param add_to_toolbar: Flag indicating whether the action should also
-            be added to the toolbar. Defaults to True.
-        :type add_to_toolbar: bool
-
-        :param status_tip: Optional text to show in a popup when mouse pointer
-            hovers over the action.
-        :type status_tip: str
-
-        :param parent: Parent widget for the new action. Defaults None.
-        :type parent: QWidget
-
-        :param whats_this: Optional text to show in the status bar when the
-            mouse pointer hovers over the action.
-
-        :returns: The action that was created. Note that the action is also
-            added to self.actions list.
-        :rtype: QAction
-        """
+        self,
+        icon_path,
+        text,
+        callback,
+        enabled_flag=True,
+        add_to_menu=True,
+        add_to_toolbar=True,
+        status_tip=None,
+        whats_this=None,
+        parent=None):
 
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
@@ -149,25 +83,17 @@ class DotMap:
 
         if status_tip is not None:
             action.setStatusTip(status_tip)
-
         if whats_this is not None:
             action.setWhatsThis(whats_this)
-
         if add_to_toolbar:
             self.toolbar.addAction(action)
-
         if add_to_menu:
-            self.iface.addPluginToVectorMenu(
-                self.menu,
-                action)
+            self.iface.addPluginToVectorMenu(self.menu, action)
 
         self.actions.append(action)
-
         return action
 
     def initGui(self):
-        """Create the menu entries and toolbar icons inside the QGIS GUI."""
-
         icon_path = ':/plugins/DotMap/icon.png'
         self.add_action(
             icon_path,
@@ -176,19 +102,13 @@ class DotMap:
             parent=self.iface.mainWindow())
 
     def unload(self):
-        """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-            self.iface.removePluginVectorMenu(
-                self.tr(u'&Dot Map'),
-                action)
+            self.iface.removePluginVectorMenu(self.tr(u'&Dot Map'), action)
             self.iface.removeToolBarIcon(action)
-        # remove the toolbar
         del self.toolbar
 
     def run(self):
-
-        # Listar capas poligonales
-        # limpiar form
+        # clear form
         self.dlg.layerComboBox.clear()
         self.dlg.fieldComboBox.clear()
         self.dlg.minValBox.clear()
@@ -197,115 +117,182 @@ class DotMap:
         self.dlg.simMinValBox.clear()
         self.dlg.simMaxValBox.clear()
         self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
-        # borrar lista
-        self.dlg.layerComboBox.clear()
+
+        # list polygon layers
         layer_list = []
         for layer in QgsProject.instance().mapLayers().values():
-            layerType = layer.type()
-            if layerType == QgsMapLayer.VectorLayer:
-                if layer.geometryType() == 2:  # 2=poligonos
-                    layer_list.append(layer.name())
-                    self.dlg.layerComboBox.addItem(layer.name())
+            if layer.type() == QgsMapLayer.VectorLayer and layer.geometryType() == QgsWkbTypes.PolygonGeometry:
+                layer_list.append(layer.name())
+                self.dlg.layerComboBox.addItem(layer.name())
 
         self.dlg.layerComboBox.activated.connect(self.getNumFields)
         self.dlg.simulationButton.setEnabled(False)
 
-        # si no hay capas poligonales
         if not layer_list:
             QMessageBox.about(self.iface.mainWindow(), 'Message', 'Polygon layers not found')
             self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
         else:
-            # show the dialog
             self.dlg.show()
 
-        # Run the dialog event loop
+        # dialog loop
         result = self.dlg.exec_()
-        # See if OK was pressed
         if result:
-            # Evento cuando se hace clic en boton OK
-            # Crear ventana dialogo
-
-            #dialog = QProgressDialog("Dot progress", "Cancel", 0, 100,self.dlg)
             dialog = QProgressDialog()
             dialog.setWindowTitle("Dot progress")
             bar = QProgressBar(dialog)
+            bar.setRange(0, 100)
             bar.setValue(0)
             dialog.setBar(bar)
             dialog.setMinimumWidth(300)
             dialog.show()
 
-            #QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('HelloWorld', "HelloWorld"), "resultado de boton OK")
-            name = self.dlg.layerComboBox.currentText()
-            layer = QgsProject.instance().mapLayersByName(name)[0]
-            crs = layer.crs().authid()
-            #QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('CRS', "CRS"), crs)
-            divisor = self.dlg.valForDot.text()
-            cuenta = layer.featureCount()
-
             try:
-                dotLyr = QgsVectorLayer('Point?crs=' + crs, self.dlg.fieldComboBox.currentText() + ' (1 dot = ' + divisor + ')', "memory")
-                features = layer.getFeatures()
+                name = self.dlg.layerComboBox.currentText()
+                layer = QgsProject.instance().mapLayersByName(name)[0]
+                crs = layer.crs().authid()
+
+                divisor = float(self.dlg.valForDot.text())
+                if divisor <= 0:
+                    raise ValueError("Divisor must be > 0")
+
+                count_features = max(1, layer.featureCount())  # avoid div by zero
+
+                dotLyr = QgsVectorLayer('Point?crs=' + crs, f"{self.dlg.fieldComboBox.currentText()} (1 dot = {divisor:g})", "memory")
                 vpr = dotLyr.dataProvider()
-                # simbologia
                 symbol = QgsMarkerSymbol.createSimple({'name': 'circle', 'color': 'black', 'size': '1'})
                 dotLyr.renderer().setSymbol(symbol)
                 dotFeatures = []
                 j = 0
 
-                for feature in features:
-                    pop = feature[self.dlg.fieldComboBox.currentText()]
+                field_name = self.dlg.fieldComboBox.currentText()
+                for feature in layer.getFeatures():
+                    try:
+                        pop_val = feature[field_name]
+                        if pop_val is None:
+                            continue
+                        pop = float(pop_val)
+                    except Exception:
+                        continue
+
                     if pop > 0:
-                        # Update the progress bar
-                        j = j + 1
-                        percent = (j / float(cuenta)) * 100
-                        #print( "percent is: " + str(int(percent))+ " %")
-                        bar.setValue(int(percent))
+                        j += 1
+                        percent = int((j / float(count_features)) * 100)
+                        bar.setValue(percent)
                         QApplication.processEvents()
 
-                        density = pop / int(divisor)
-                        found = 0
-                        dots = []
+                        # number of dots for the feature
+                        ratio = pop / divisor
+                        base = int(ratio)
+                        frac = ratio - base
+                        total_dots = base + (1 if random.random() < frac else 0)
+                        if total_dots <= 0:
+                            continue
+
                         g = feature.geometry()
-                        minx = g.boundingBox().xMinimum()
-                        miny = g.boundingBox().yMinimum()
-                        maxx = g.boundingBox().xMaximum()
-                        maxy = g.boundingBox().yMaximum()
-                        while found < density:
-                            x = random.uniform(minx, maxx)
-                            y = random.uniform(miny, maxy)
-                            pnt = QgsPointXY(x, y)
-                            if g.contains(pnt):
-                                dots.append(pnt)
-                                found += 1
-                        geom = QgsGeometry.fromMultiPointXY(dots)
-                        f = QgsFeature()
-                        f.setGeometry(geom)
-                        dotFeatures.append(f)
+                        # Single polygon fast path
+                        if not g.isMultipart():
+                            rect = g.boundingBox()
+                            minx, miny, maxx, maxy = rect.xMinimum(), rect.yMinimum(), rect.xMaximum(), rect.yMaximum()
+                            found = 0
+                            pts = []
+                            while found < total_dots:
+                                x = random.uniform(minx, maxx)
+                                y = random.uniform(miny, maxy)
+                                pnt = QgsPointXY(x, y)
+                                if g.contains(QgsGeometry.fromPointXY(pnt)):
+                                    pts.append(pnt)
+                                    found += 1
+                            if pts:
+                                f = QgsFeature()
+                                f.setGeometry(QgsGeometry.fromMultiPointXY(pts))
+                                dotFeatures.append(f)
+                        else:
+                            # Multipolygon: split into parts, allocate dots by area
+                            parts = []
+                            # robust decomposition into polygons
+                            try:
+                                # Newer API: constParts() yields QgsAbstractGeometry
+                                for part in g.constParts():
+                                    part_geom = QgsGeometry(part.clone())
+                                    parts.append(part_geom)
+                            except Exception:
+                                # Fallback: asGeometryCollection()
+                                for part in g.asGeometryCollection():
+                                    parts.append(part)
 
-                vpr.addFeatures(dotFeatures)
-                dotLyr.updateExtents()
-                QgsProject.instance().addMapLayers([dotLyr])
+                            if not parts:
+                                continue
 
-                # limpiar form
+                            areas = [max(0.0, p.area()) for p in parts]
+                            total_area = sum(areas)
+                            if total_area <= 0:
+                                continue
+
+                            # Hamilton method: floor to base, distribute remainder by largest fraction
+                            quotas = [ (total_dots * (a / total_area)) for a in areas ]
+                            base_counts = [ int(math.floor(q)) for q in quotas ]
+                            remainder = total_dots - sum(base_counts)
+                            fracs = [ (q - b, idx) for idx, (q, b) in enumerate(zip(quotas, base_counts)) ]
+                            fracs.sort(reverse=True)  # biggest fractional parts first
+                            for k in range(remainder):
+                                base_counts[fracs[k][1]] += 1
+
+                            # Generate points per part using each part's bbox
+                            pts_all = []
+                            for part_geom, npts in zip(parts, base_counts):
+                                if npts <= 0:
+                                    continue
+                                rect = part_geom.boundingBox()
+                                minx, miny, maxx, maxy = rect.xMinimum(), rect.yMinimum(), rect.xMaximum(), rect.yMaximum()
+                                found = 0
+                                tries = 0
+                                # rejection sampling within part's bbox
+                                while found < npts:
+                                    x = random.uniform(minx, maxx)
+                                    y = random.uniform(miny, maxy)
+                                    pnt = QgsPointXY(x, y)
+                                    if part_geom.contains(QgsGeometry.fromPointXY(pnt)):
+                                        pts_all.append(pnt)
+                                        found += 1
+                                    else:
+                                        # safety valve: if bbox is very loose, keep UI responsive
+                                        tries += 1
+                                        if tries % 1000 == 0:
+                                            QApplication.processEvents()
+                            if pts_all:
+                                f = QgsFeature()
+                                f.setGeometry(QgsGeometry.fromMultiPointXY(pts_all))
+                                dotFeatures.append(f)
+
+                if dotFeatures:
+                    vpr.addFeatures(dotFeatures)
+                    dotLyr.updateExtents()
+                    QgsProject.instance().addMapLayers([dotLyr])
+
+                # clear
                 self.dlg.layerComboBox.clear()
                 self.dlg.fieldComboBox.clear()
                 self.dlg.minValBox.clear()
                 self.dlg.maxValBox.clear()
                 self.dlg.valForDot.clear()
 
-            except Exception:
-                QMessageBox.about(self.iface.mainWindow(), 'Error', 'Input can only be a number')
-                # pass
+            except Exception as e:
+                QMessageBox.about(self.iface.mainWindow(), 'Error', f'Invalid numeric input: {e}')
 
     def getNumFields(self):
-        #QMessageBox.about(self.iface.mainWindow(), 'Message','Polygon layers not found')
         self.dlg.fieldComboBox.clear()
         name = self.dlg.layerComboBox.currentText()
         layer = QgsProject.instance().mapLayersByName(name)[0]
         fields = layer.fields()
         for field in fields:
-            if (field.typeName() == 'Integer' or field.typeName() == 'Integer64'):  # Real, String ...
-                self.dlg.fieldComboBox.addItem(field.name())
+            try:
+                if hasattr(field, "isNumeric") and field.isNumeric():
+                    self.dlg.fieldComboBox.addItem(field.name())
+                else:
+                    if field.typeName() in ('Integer', 'Integer64', 'Real', 'Double', 'Float', 'Numeric', 'Decimal'):
+                        self.dlg.fieldComboBox.addItem(field.name())
+            except Exception:
+                continue
 
         self.dlg.fieldComboBox.activated.connect(self.getStats)
         self.dlg.simulationButton.setEnabled(True)
@@ -316,26 +303,42 @@ class DotMap:
         name = self.dlg.layerComboBox.currentText()
         layer = QgsProject.instance().mapLayersByName(name)[0]
 
-        pob = []
+        values = []
         for feature in layer.getFeatures():
-            value = feature[fieldSel]
-            if value > 0:
-                pob.append(int(value))
+            try:
+                value = feature[fieldSel]
+                if value is None:
+                    continue
+                v = float(value)
+                if v > 0:
+                    values.append(v)
+            except Exception:
+                continue
 
-        maxVal = sorted(pob, reverse=True)[0]
-        minVal = sorted(pob)[0]
-        self.dlg.minValBox.setText(str(minVal))
-        self.dlg.maxValBox.setText(str(maxVal))
+        if not values:
+            self.dlg.minValBox.setText('0')
+            self.dlg.maxValBox.setText('0')
+            return
+
+        maxVal = max(values)
+        minVal = min(values)
+        self.dlg.minValBox.setText(f"{minVal:g}")
+        self.dlg.maxValBox.setText(f"{maxVal:g}")
 
     def simulation(self):
         try:
-            if int(self.dlg.valForDot.text()) > int(self.dlg.maxValBox.text()):
-                QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('ERROR', "ERROR"), "Divisor higher than max value")
-            else:
-                simMaxVal = int(int(self.dlg.maxValBox.text()) / int(self.dlg.valForDot.text()))
-                simMinVal = int(int(self.dlg.minValBox.text()) / int(self.dlg.valForDot.text()))
-                self.dlg.simMaxValBox.setText(str(simMaxVal))
-                self.dlg.simMinValBox.setText(str(simMinVal))
-                self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(True)
+            divisor = float(self.dlg.valForDot.text())
+            max_val = float(self.dlg.maxValBox.text())
+            min_val = float(self.dlg.minValBox.text())
+
+            if divisor <= 0 or divisor > max_val:
+                QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('ERROR', "ERROR"), "Divisor must be > 0 and ≤ max value")
+                return
+
+            simMaxVal = int(max_val / divisor)
+            simMinVal = int(min_val / divisor)
+            self.dlg.simMaxValBox.setText(str(simMaxVal))
+            self.dlg.simMinValBox.setText(str(simMinVal))
+            self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(True)
         except Exception:
-            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('ERROR', "ERROR"), "Void divisor or lower than 0 or divisor higher than max value")
+            QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('ERROR', "ERROR"), "Divisor vacío o no numérico, o mayor que el valor máximo")
