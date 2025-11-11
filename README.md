@@ -48,4 +48,4 @@ If the geometry is a multipolygon with many islands the algorithm slows down bec
 There are two folder, each one for Qgis 2.X or Qgis 3.X
 
 ### Tested
-Tested in Linux box with Qgis 2.14, 2.18 and 3.03
+Tested in Linux box with Qgis 2.14, 2.18, 3.03 and 3.34
