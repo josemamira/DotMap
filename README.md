@@ -24,10 +24,25 @@ José Manuel Mira Martínez
 ### Thanks
 This plugin is based in Chapter 8: "Creating a dot density map" from book "QGIS Python Programming Cookbook", author: Joel Lawhead
 
-### Limitations
-For each polygon, the plugin gets its box (minx, maxx, miny, maxy). Then, divide the value of the attribute of the field selected by the user's divisor to know the number of points per polygon.
+### New approach to the algorithm
+Until now, the algorithm calculated the BBOX (bounding box) of each polygon and generated random points based on those limits. If a point was contained within the polygon (contains), it was considered a candidate. 
+
+The performance problem occurred when the geometry was a multipolygon formed by several isolated (non-contiguous) polygons, such as an archipelago of islands. The probability of a point falling outside the polygon is very high, which meant that the calculation time was excessively long.
+
+We now apply a new approach to the problem. If the geometry is a multipolygon with the characteristics indicated above, the following is done:
+
+1. The number of polygons is counted.
+2. The BBOX of each polygon is calculated. 
+2. The area of each polygon is stored.
+3. A number of points is assigned to each polygon in proportion to its area. (based on Hamilton's method for seat allocation).
+4. For each polygon, the corresponding points are generated based on its BBOX.
+
+This significantly reduces the calculation time.
+
+### ~~Limitations~~
+~~For each polygon, the plugin gets its box (minx, maxx, miny, maxy). Then, divide the value of the attribute of the field selected by the user's divisor to know the number of points per polygon.
 For each point, the algorithm generates a random point included in the table. Next, it verify if the point is inside the polygon, and then this is designed as a candidate.
-If the geometry is a multipolygon with many islands the algorithm slows down because the spatial box is very large, and the chances of the point falling is an island is very small.
+If the geometry is a multipolygon with many islands the algorithm slows down because the spatial box is very large, and the chances of the point falling is an island is very small.~~
 
 ### Notes
 There are two folder, each one for Qgis 2.X or Qgis 3.X
