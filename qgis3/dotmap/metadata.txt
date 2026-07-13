@@ -8,7 +8,8 @@
 
 [general]
 name=Dot Map
-qgisMinimumVersion=3.0
+qgis_minimum_version=3.22
+qgis_maximum_version=4.99
 description=Create density dot layer from polygons
 version=0.2
 author=Jose Manuel Mira Martinez
