@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
@@ -14,22 +13,30 @@
  ***************************************************************************/
 
 /***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
+ * *
+ * This program is free software; you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation; either version 2 of the License, or     *
+ * (at your option) any later version.                                   *
+ * *
  ***************************************************************************/
 """
 from qgis.core import *
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
+from qgis.PyQt.QtGui import QIcon
 
-from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import *
+# Bloque de compatibilidad Qt5 / Qt6 para elementos de Interfaz
+try:
+    from qgis.PyQt.QtWidgets import (
+        QApplication, QAction, QMessageBox, QProgressDialog, 
+        QProgressBar, QDialogButtonBox
+    )
+except ImportError:
+    from PyQt5.QtWidgets import (
+        QApplication, QAction, QMessageBox, QProgressDialog, 
+        QProgressBar, QDialogButtonBox
+    )
+
 from .resources import *
 from .dot_map_dialog import DotMapDialog
 import os.path
@@ -94,7 +101,7 @@ class DotMap:
         return action
 
     def initGui(self):
-        icon_path = ':/plugins/DotMap/icon.png'
+        icon_path = os.path.join(os.path.dirname(__file__), 'icon.png')
         self.add_action(
             icon_path,
             text=self.tr(u'Dot density layer'),
@@ -116,12 +123,12 @@ class DotMap:
         self.dlg.valForDot.clear()
         self.dlg.simMinValBox.clear()
         self.dlg.simMaxValBox.clear()
-        self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.dlg.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
 
         # list polygon layers
         layer_list = []
         for layer in QgsProject.instance().mapLayers().values():
-            if layer.type() == QgsMapLayer.VectorLayer and layer.geometryType() == QgsWkbTypes.PolygonGeometry:
+            if layer.type() == QgsMapLayerType.VectorLayer and layer.geometryType() == QgsWkbTypes.GeometryType.PolygonGeometry:
                 layer_list.append(layer.name())
                 self.dlg.layerComboBox.addItem(layer.name())
 
@@ -130,12 +137,18 @@ class DotMap:
 
         if not layer_list:
             QMessageBox.about(self.iface.mainWindow(), 'Message', 'Polygon layers not found')
-            self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+            self.dlg.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
         else:
             self.dlg.show()
 
         # dialog loop
-        result = self.dlg.exec_()
+        # result = self.dlg.exec_()
+        # Comprobamos si existe exec (Qt6) o exec_ (Qt5) para mostrar el diálogo
+        if hasattr(self.dlg, 'exec'):
+            result = self.dlg.exec()
+        else:
+            result = self.dlg.exec_()
+        
         if result:
             dialog = QProgressDialog()
             dialog.setWindowTitle("Dot progress")
@@ -339,6 +352,6 @@ class DotMap:
             simMinVal = int(min_val / divisor)
             self.dlg.simMaxValBox.setText(str(simMaxVal))
             self.dlg.simMinValBox.setText(str(simMinVal))
-            self.dlg.button_box.button(QDialogButtonBox.Ok).setEnabled(True)
+            self.dlg.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
         except Exception:
             QMessageBox.information(self.iface.mainWindow(), QCoreApplication.translate('ERROR', "ERROR"), "Divisor vacío o no numérico, o mayor que el valor máximo")
